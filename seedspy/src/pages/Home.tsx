@@ -24,7 +24,7 @@ export default function Home() {
             to="/tools"
             className="border border-gray-300 px-6 py-3 rounded-full font-semibold text-black hover:bg-gray-100 text-center"
           >
-            Try Slime Chunk Finder
+            Try all the tools
           </Link>
         </div>
       </div>
