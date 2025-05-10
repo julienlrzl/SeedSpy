@@ -7,13 +7,13 @@ export default function SlimeChunk() {
   );
 
   // pour Backend
-  const [x, setX] = useState(0);
-  const [z, setZ] = useState(0);
+  const [x, setX] = useState("");
+  const [z, setZ] = useState("");
   const [seed, setSeed] = useState("12345");
   const [isSlime, setIsSlime] = useState<boolean | null>(null);
 
   function checkSlimeChunk() {
-    const url = `http://localhost:8080/slime?seed=${seed}&x=${x}&z=${z}`;
+    const url = `http://localhost:8080/slime?seed=${seed}&x=${Number(x)}&z=${Number(z)}`;
     console.log("Requête API envoyée :", url);
     console.log("Coordonnées envoyées au backend :", { seed, x, z });
     fetch(url)
@@ -26,6 +26,19 @@ export default function SlimeChunk() {
         console.error("Erreur API :", err);
         setIsSlime(null);
       });
+  }
+
+  function generateRandomSeed(): string {
+    const min = BigInt("-9000000000000000000");
+    const max = BigInt("9000000000000000000");
+    const range = max - min + BigInt(1);
+
+    const rand =
+      BigInt(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)) *
+      BigInt(Date.now());
+    const seed = (rand % range) + min;
+
+    return seed.toString();
   }
 
   return (
@@ -52,7 +65,10 @@ export default function SlimeChunk() {
             <button className="ml-3 px-4 py-2 rounded-lg bg-white text-black border border-[#e5e5e5] font-semibold hover:bg-neutral-100 whitespace-nowrap">
               Load from Save
             </button>
-            <button className="ml-2 px-4 py-2 rounded-lg bg-white text-black border border-[#e5e5e5] font-semibold hover:bg-neutral-100 whitespace-nowrap">
+            <button
+              onClick={() => setSeed(generateRandomSeed())}
+              className="ml-2 px-4 py-2 rounded-lg bg-white text-black border border-[#e5e5e5] font-semibold hover:bg-neutral-100 whitespace-nowrap"
+            >
               Random
             </button>
           </div>
@@ -120,22 +136,40 @@ export default function SlimeChunk() {
             ))}
           </div>
         </div>
+        <div className="w-[512px] mx-auto mt-2 mb-1 text-end text-xs min-h-[1.25rem]">
+          <p
+            className={`transition-opacity duration-200 ${
+              isSlime === null
+                ? "invisible"
+                : isSlime
+                  ? "text-green-600 font-semibold"
+                  : "text-red-600 font-semibold"
+            }`}
+          >
+            {isSlime
+              ? "C'est un chunk à slime !"
+              : "Ce n'est pas un chunk à slime."}
+            <span className="text-gray-500 font-normal ml-2 text-xs">
+              ChunkX: {Math.floor(x / 16)}, ChunkZ: {Math.floor(z / 16)}
+            </span>
+          </p>
+        </div>
         {/* Champs X/Z + bouton Go aligné à gauche de la grille */}
-        <div className="mt-6 w-[512px] mx-auto flex justify-between items-center">
+        <div className="mt-2 w-[512px] mx-auto flex justify-between items-center">
           {/* X/Z + Go */}
           <div className="flex items-center gap-1 bg-white border border-[#f0f0f0] rounded-lg px-3 py-2 shadow-sm">
             <input
               type="number"
               placeholder="X"
               value={x}
-              onChange={(e) => setX(Number(e.target.value))}
+              onChange={(e) => setX(e.target.value)}
               className="w-16 text-center bg-transparent focus:outline-none placeholder:text-neutral-500 text-black font-manrope text-sm"
             />
             <input
               type="number"
               placeholder="Z"
               value={z}
-              onChange={(e) => setZ(Number(e.target.value))}
+              onChange={(e) => setZ(e.target.value)}
               className="w-16 text-center bg-transparent focus:outline-none placeholder:text-neutral-500 text-black font-manrope text-sm"
             />
             <button
@@ -145,7 +179,6 @@ export default function SlimeChunk() {
               Go
             </button>
           </div>
-
           {/* Share Button */}
           <button
             className="flex items-center gap-2 text-white text-xs font-bold px-3 py-2 rounded-md hover:opacity-90 transition h-[40px]"
@@ -163,25 +196,12 @@ export default function SlimeChunk() {
             Share
           </button>
         </div>
-        <img
-          src={Slimeball}
-          alt="Slime Icon"
-          className="hidden md:block absolute z-20 w-[110px] h-auto bottom-[150px] right-[-35px]"
-        />
-        <div className="pt-[100px] text-center">
-          <h1 className="text-3xl font-bold">Slime Chunk Checker</h1>
-          {isSlime === null ? (
-            <p>Chargement...</p>
-          ) : isSlime ? (
-            <p className="text-green-600">✅ C'est un chunk à slime !</p>
-          ) : (
-            <p className="text-red-600">❌ Ce n'est pas un chunk à slime.</p>
-          )}
-        </div>
-        <p className="text-sm text-gray-500">
-          ChunkX: {Math.floor(x / 16)}, ChunkZ: {Math.floor(z / 16)}
-        </p>
       </div>
+      <img
+        src={Slimeball}
+        alt="Slime Icon"
+        className="hidden md:block absolute z-20 w-[110px] h-auto bottom-[150px] right-[150px]"
+      />
     </section>
   );
 }
