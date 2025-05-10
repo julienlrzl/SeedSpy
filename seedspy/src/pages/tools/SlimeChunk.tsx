@@ -89,7 +89,7 @@ export default function SlimeChunk() {
                 className="w-2 h-2 border border-gray-200"
                 style={{
                   backgroundColor: slimeChunks.has(i)
-                    ? "#4ade80"
+                    ? "rgba(118, 190, 109, 1)"
                     : "transparent",
                 }}
               />
@@ -116,7 +116,10 @@ export default function SlimeChunk() {
           </div>
 
           {/* Share Button */}
-          <button className="flex items-center gap-2 bg-[#95D03A] text-white text-xs font-bold px-3 py-2 rounded-md hover:opacity-90 transition h-[40px]">
+          <button
+            className="flex items-center gap-2 text-white text-xs font-bold px-3 py-2 rounded-md hover:opacity-90 transition h-[40px]"
+            style={{ backgroundColor: "rgba(118,190,109,255)" }}
+          >
             <svg
               height="16"
               viewBox="0 0 512 512"
