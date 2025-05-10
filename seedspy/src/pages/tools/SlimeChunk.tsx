@@ -43,13 +43,34 @@ export default function SlimeChunk() {
         </div>
         <div className="relative w-[512px] h-[512px] mx-auto">
           {/* Flèche X centrée au-dessus avec marge haute + marge basse équilibrée */}
-          <div className="absolute -top-9 left-1/2 -translate-x-1/2 flex items-center gap-1 text-gray-600 font-manrope font-medium text-xl pointer-events-none">
+          <div className="absolute -top-16 left-1/2 -translate-x-1/2 flex items-center gap-1 text-gray-600 font-manrope font-semibold text-xl pointer-events-none">
             <span>X</span>
           </div>
 
           {/* Flèche Z centrée à gauche avec espace équivalent à droite de la grille */}
-          <div className="absolute top-1/2 -left-7 -translate-y-1/2 flex items-center gap-1 text-gray-600 font-manrope font-medium text-xl pointer-events-none">
+          <div className="absolute top-1/2 -left-16 -translate-y-1/2 flex items-center gap-1 text-gray-600 font-manrope font-semibold text-xl pointer-events-none">
             <span>Z</span>
+          </div>
+
+          {/* Axe X (haut) */}
+          <div className="absolute -top-6 left-0 flex w-[512px] justify-between px-1 text-xs text-gray-500 font-mono">
+            {[...Array(9)].map((_, i) => (
+              <div key={i} className="w-[56px] text-center">
+                {i * 8}
+              </div>
+            ))}
+          </div>
+
+          {/* Axe Z (gauche) */}
+          <div className="absolute top-0 -left-6 h-[512px] flex flex-col justify-between py-1 text-xs text-gray-500 font-mono">
+            {[...Array(9)].map((_, i) => (
+              <div
+                key={i}
+                className="h-[56px] flex items-center justify-end pr-1"
+              >
+                {i * 8}
+              </div>
+            ))}
           </div>
 
           {/* La grille */}
@@ -61,6 +82,7 @@ export default function SlimeChunk() {
               height: "512px",
             }}
           >
+            <div className="absolute top-0 left-0 w-[512px] h-[512px] border-2 border-gray-400 rounded-sm pointer-events-none" />
             {[...Array(64 * 64)].map((_, i) => (
               <div
                 key={i}
