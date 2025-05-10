@@ -1,6 +1,11 @@
 import { Link } from "react-router-dom";
+import Slimeball from "../../assets/Slimeball.png";
 
 export default function SlimeChunk() {
+  const slimeChunks = new Set<number>(
+    Array.from({ length: 500 }, () => Math.floor(Math.random() * 4096))
+  );
+
   return (
     <section className="w-full px-4 pt-[100px] pb-16 flex justify-center relative">
       {/* Bloc principal */}
@@ -12,7 +17,7 @@ export default function SlimeChunk() {
           Learn how to optimize your seed, locate rare structures, and explore
           the best biomes efficiently.
         </p>
-        <div className="flex flex-col items-start w-full max-w-xl mx-auto gap-4 mb-8">
+        <div className="flex flex-col items-start w-full max-w-xl mx-auto gap-4 mb-8 pb-10">
           {/* Seed input + buttons */}
           <div className="flex items-center bg-[#fafafa] rounded-xl border border-[#f0f0f0] px-[15px] py-[12px] w-full">
             <input
@@ -36,6 +41,77 @@ export default function SlimeChunk() {
             </select>
           </div>
         </div>
+        <div className="relative w-[512px] h-[512px] mx-auto">
+          {/* Flèche X centrée au-dessus avec marge haute + marge basse équilibrée */}
+          <div className="absolute -top-9 left-1/2 -translate-x-1/2 flex items-center gap-1 text-gray-600 font-manrope font-medium text-xl pointer-events-none">
+            <span>X</span>
+          </div>
+
+          {/* Flèche Z centrée à gauche avec espace équivalent à droite de la grille */}
+          <div className="absolute top-1/2 -left-7 -translate-y-1/2 flex items-center gap-1 text-gray-600 font-manrope font-medium text-xl pointer-events-none">
+            <span>Z</span>
+          </div>
+
+          {/* La grille */}
+          <div
+            className="grid"
+            style={{
+              gridTemplateColumns: `repeat(64, 1fr)`,
+              width: "512px",
+              height: "512px",
+            }}
+          >
+            {[...Array(64 * 64)].map((_, i) => (
+              <div
+                key={i}
+                className="w-2 h-2 border border-gray-200"
+                style={{
+                  backgroundColor: slimeChunks.has(i)
+                    ? "#4ade80"
+                    : "transparent",
+                }}
+              />
+            ))}
+          </div>
+        </div>
+        {/* Champs X/Z + bouton Go aligné à gauche de la grille */}
+        <div className="mt-6 w-[512px] mx-auto flex justify-between items-center">
+          {/* X/Z + Go */}
+          <div className="flex items-center gap-1 bg-white border border-[#f0f0f0] rounded-lg px-3 py-2 shadow-sm">
+            <input
+              type="number"
+              placeholder="X"
+              className="w-16 text-center bg-transparent focus:outline-none placeholder:text-neutral-500 text-black font-manrope text-sm"
+            />
+            <input
+              type="number"
+              placeholder="Z"
+              className="w-16 text-center bg-transparent focus:outline-none placeholder:text-neutral-500 text-black font-manrope text-sm"
+            />
+            <button className="px-3 py-1.5 rounded-md bg-black text-white text-sm font-semibold hover:bg-neutral-800">
+              Go
+            </button>
+          </div>
+
+          {/* Share Button */}
+          <button className="flex items-center gap-2 bg-[#95D03A] text-white text-xs font-bold px-3 py-2 rounded-md hover:opacity-90 transition h-[40px]">
+            <svg
+              height="16"
+              viewBox="0 0 512 512"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+              className="fill-white"
+            >
+              <path d="M384,336a63.78,63.78,0,0,0-46.12,19.7l-148-83.27a63.85,63.85,0,0,0,0-32.86l148-83.27a63.8,63.8,0,1,0-15.73-27.87l-148,83.27a64,64,0,1,0,0,88.6l148,83.27A64,64,0,1,0,384,336Z" />
+            </svg>
+            Share
+          </button>
+        </div>
+        <img
+          src={Slimeball}
+          alt="Slime Icon"
+          className="hidden md:block absolute z-20 w-[110px] h-auto bottom-[150px] right-[-35px]"
+        />
       </div>
     </section>
   );
