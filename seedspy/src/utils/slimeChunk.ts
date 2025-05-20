@@ -1,59 +1,69 @@
-// utils/slimeChunk.ts
-
-export class JavaRandom {
-  private seed!: bigint;
-
-  private static readonly MULTIPLIER = BigInt(0x5deece66d);
-  private static readonly ADDEND = BigInt(0xb);
-  private static readonly MASK = (BigInt(1) << BigInt(48)) - BigInt(1);
-
-  constructor(seed: bigint) {
-    this.setSeed(seed);
+// Emule la conversion Java int32 signée
+function toInt32(n: bigint): bigint {
+  const mask32 = 0xffffffffn;
+  let x = n & mask32;
+  // si le bit 31 est à 1, interpréter comme négatif
+  if (x & 0x80000000n) {
+    x -= 0x100000000n;
   }
+  return x;
+}
 
-  setSeed(seed: bigint) {
-    this.seed = (seed ^ JavaRandom.MULTIPLIER) & JavaRandom.MASK;
+// Émulation de java.util.Random (identique à Java)
+class JavaRandom {
+  private static readonly MULTIPLIER = 0x5deece66dn;
+  private static readonly ADDEND = 0xbn;
+  private static readonly MASK = (1n << 48n) - 1n;
+
+  private seed: bigint;
+
+  constructor(seedVal: bigint) {
+    this.seed = (seedVal ^ JavaRandom.MULTIPLIER) & JavaRandom.MASK;
   }
 
   private next(bits: number): number {
     this.seed =
       (this.seed * JavaRandom.MULTIPLIER + JavaRandom.ADDEND) & JavaRandom.MASK;
-    return Number(this.seed >> BigInt(48 - bits));
+    return Number(this.seed >> (48n - BigInt(bits)));
   }
 
-  nextInt(bound: number): number {
-    if (bound <= 0) throw new Error("bound must be positive");
-
-    const m = bound - 1;
-    if ((bound & m) === 0) {
-      return Math.floor((bound * this.next(31)) / (1 << 31));
+  public nextInt(n: number): number {
+    if ((n & -n) === n) {
+      return (this.next(31) >>> 0) & (n - 1);
     }
-
-    let u = this.next(31);
-    let r = u % bound;
-    while (u - r + m < 0) {
-      u = this.next(31);
-      r = u % bound;
-    }
-    return r;
+    let bits: number, val: number;
+    do {
+      bits = this.next(31);
+      val = bits % n;
+    } while (bits - val + (n - 1) < 0);
+    return val;
   }
 }
 
 export function isSlimeChunk(
-  seed: bigint,
-  blockX: number,
-  blockZ: number
+  worldSeed: bigint,
+  xPos: number,
+  zPos: number
 ): boolean {
-  const chunkX = Math.floor(blockX / 16);
-  const chunkZ = Math.floor(blockZ / 16);
+  // 1) calcul int32(x*x*0x4c1906)
+  const a = toInt32(BigInt(xPos) * BigInt(xPos) * 0x4c1906n);
 
-  const a = chunkX * chunkX * 4987142;
-  const b = chunkX * 5947611;
-  const c = chunkZ * chunkZ * 4392871;
-  const d = chunkZ * 389711;
+  // 2) calcul int32(x*0x5ac0db)
+  const b = toInt32(BigInt(xPos) * 0x5ac0dbn);
 
-  const newSeed = (BigInt(seed) + BigInt(a + b + c + d)) ^ BigInt(0x3ad8025f);
+  // 3) calcul (int32(z*z)) * 0x4307a7L    ← note : multiplication 64-bits
+  const z2i = toInt32(BigInt(zPos) * BigInt(zPos));
+  const c = z2i * 0x4307a7n;
 
-  const random = new JavaRandom(newSeed);
-  return random.nextInt(10) === 0;
+  // 4) calcul int32(z*0x5f24f)
+  const d = toInt32(BigInt(zPos) * 0x5f24fn);
+
+  // 5) somme + worldSeed, puis XOR
+  // Java : seed = worldSeed + a + b + c + d ^ 0x3ad8025fL;
+  const sum = worldSeed + a + b + c + d;
+  const finalSeed = sum ^ 0x3ad8025fn;
+
+  // 6) on passe au Random et on teste nextInt(10)==0
+  const rnd = new JavaRandom(finalSeed);
+  return rnd.nextInt(10) === 0;
 }

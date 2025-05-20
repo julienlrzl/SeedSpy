@@ -68,7 +68,7 @@ export default function SlimeChunk() {
     setCenterChunk({ x: chunkX, z: chunkZ });
 
     // ✅ On doit passer chunkX/chunkZ (et non blockX/blockZ)
-    const result = isSlimeChunk(BigInt(currentSeed), chunkX * 16, chunkZ * 16);
+    const result = isSlimeChunk(BigInt(currentSeed), chunkX, chunkZ);
     setIsSlime(result);
 
     loadSlimeChunksAround(chunkX, chunkZ);
