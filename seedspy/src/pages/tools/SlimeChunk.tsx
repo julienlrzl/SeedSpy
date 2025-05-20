@@ -108,10 +108,7 @@ export default function SlimeChunk() {
         const chunkX = centerX + dx;
         const chunkZ = centerZ + dz;
 
-        const blockX = chunkX * 16;
-        const blockZ = chunkZ * 16;
-
-        if (isSlimeChunk(seedParam, blockX, blockZ)) {
+        if (isSlimeChunk(seedParam, chunkX, chunkZ)) {
           newSet.add(`${chunkX},${chunkZ}`);
         }
       }
