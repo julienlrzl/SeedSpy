@@ -9,6 +9,7 @@ import ShareButton from "../../components/SlimeFinder/ShareButton";
 import CoordinateForm from "../../components/SlimeFinder/CoordinateForm";
 import CoordinateInfo from "../../components/SlimeFinder/CoordinatesInfo";
 import SlimeGrid from "../../components/SlimeFinder/SlimeGrid";
+import Questions from "../../components/Questions";
 
 export default function SlimeChunk() {
   const [platform, setPlatform] = useState("java");
@@ -19,18 +20,23 @@ export default function SlimeChunk() {
   const [isSlime, setIsSlime] = useState<boolean | null>(null);
   const [slimeChunksSet, setSlimeChunksSet] = useState<Set<string>>(new Set());
   const [zoom, setZoom] = useState(1);
-  const [centerChunk, setCenterChunk] = useState<{
-    x: number;
-    z: number;
-  } | null>(null);
-
+  const [centerChunk, setCenterChunk] = useState<{ x: number; z: number }>({
+    x: 0,
+    z: 0,
+  });
   const gridSize = 512;
   const chunksPerRow = Math.floor(64 / zoom);
   const chunkSize = gridSize / chunksPerRow;
   const gridRef = useRef<HTMLDivElement>(null!);
-  const lastChunksPerRow = useRef<number>(chunksPerRow);
   const wheelDeltaRef = useRef(0);
   const animationRef = useRef<number | null>(null);
+  const [hoverChunk, setHoverChunk] = useState<{ x: number; z: number } | null>(
+    null
+  );
+  const [markerChunk, setMarkerChunk] = useState<{
+    x: number;
+    z: number;
+  } | null>(null);
 
   function smoothZoom() {
     if (wheelDeltaRef.current === 0) return;
@@ -66,8 +72,8 @@ export default function SlimeChunk() {
     const chunkX = Math.floor(blockX / 16);
     const chunkZ = Math.floor(blockZ / 16);
     setCenterChunk({ x: chunkX, z: chunkZ });
+    setMarkerChunk({ x: chunkX, z: chunkZ });
 
-    // ✅ On doit passer chunkX/chunkZ (et non blockX/blockZ)
     const result = isSlimeChunk(BigInt(currentSeed), chunkX, chunkZ);
     setIsSlime(result);
 
@@ -133,59 +139,68 @@ export default function SlimeChunk() {
   }, []);
 
   return (
-    <section className="w-full px-4 pt-[100px] pb-16 flex justify-center relative">
-      {/* Bloc principal */}
-      <div className="w-full max-w-5xl bg-[#fafafa] rounded-2xl border border-[#f0f0f0] px-10 py-16 text-center relative z-10">
-        <h1 className="text-4xl md:text-5xl font-extrabold font-inter text-black mb-4">
-          Slime Finder
-        </h1>
-        <p className="text-base md:text-lg text-gray-600 max-w-xl mx-auto mb-8">
-          Learn how to optimize your seed, locate rare structures, and explore
-          the best biomes efficiently.
-        </p>
-        <div className="flex flex-col items-start w-full max-w-xl mx-auto gap-4 mb-8 pb-10">
-          {/* Seed input + buttons */}
-          <SeedInput
-            seed={seed}
-            setSeed={setSeed}
-            generateRandomSeed={generateRandomSeed}
-          />
+    <>
+      <section className="w-full px-4 pt-[100px] pb-16 flex justify-center relative">
+        {/* Bloc principal */}
+        <div className="w-full max-w-5xl bg-[#fafafa] rounded-2xl border border-[#f0f0f0] px-10 py-16 text-center relative z-10">
+          <h1 className="text-4xl md:text-5xl font-extrabold font-inter text-black mb-4">
+            Slime Finder
+          </h1>
+          <p className="text-base md:text-lg text-gray-600 max-w-xl mx-auto mb-8">
+            Learn how to optimize your seed, locate rare structures, and explore
+            the best biomes efficiently.
+          </p>
+          <div className="flex flex-col items-start w-full max-w-xl mx-auto gap-4 mb-8 pb-10">
+            {/* Seed input + buttons */}
+            <SeedInput
+              seed={seed}
+              setSeed={setSeed}
+              generateRandomSeed={generateRandomSeed}
+            />
 
-          {/* Java/Bedrock select */}
-          <PlatformSelect value={platform} onChange={setPlatform} />
-        </div>
-        <div className="relative w-[512px] h-[512px] mx-auto overflow-hidden">
-          {/* Grille zoomable */}
-          <SlimeGrid
-            chunksPerRow={chunksPerRow}
-            chunkSize={chunkSize}
-            gridSize={gridSize}
-            centerChunk={centerChunk}
-            slimeChunksSet={slimeChunksSet}
-            gridRef={gridRef}
+            {/* Java/Bedrock select */}
+            <PlatformSelect value={platform} onChange={setPlatform} />
+          </div>
+          <div className="relative w-[512px] h-[512px] mx-auto overflow-hidden">
+            {/* Grille zoomable */}
+            <SlimeGrid
+              chunksPerRow={chunksPerRow}
+              chunkSize={chunkSize}
+              gridSize={gridSize}
+              centerChunk={centerChunk}
+              markerChunk={markerChunk}
+              slimeChunksSet={slimeChunksSet}
+              gridRef={gridRef}
+              setCenterChunk={setCenterChunk}
+              onHoverChunk={setHoverChunk}
+            />
+          </div>
+          {/* Info sur les coordonnées */}
+          <CoordinateInfo
+            isSlime={isSlime}
+            cursorChunk={hoverChunk ?? centerChunk}
           />
+          {/* Champs X/Z + bouton Go aligné à gauche de la grille */}
+          <div className="mt-2 w-[512px] mx-auto flex justify-between items-center">
+            {/* X/Z + Go */}
+            <CoordinateForm
+              x={x}
+              z={z}
+              setX={setX}
+              setZ={setZ}
+              onGo={checkSlimeChunk}
+            />
+            {/* Share Button */}
+            <ShareButton />
+          </div>
         </div>
-        {/* Info sur les coordonnées */}
-        <CoordinateInfo isSlime={isSlime} x={x} z={z} />
-        {/* Champs X/Z + bouton Go aligné à gauche de la grille */}
-        <div className="mt-2 w-[512px] mx-auto flex justify-between items-center">
-          {/* X/Z + Go */}
-          <CoordinateForm
-            x={x}
-            z={z}
-            setX={setX}
-            setZ={setZ}
-            onGo={checkSlimeChunk}
-          />
-          {/* Share Button */}
-          <ShareButton />
-        </div>
-      </div>
-      <img
-        src={Slimeball}
-        alt="Slime Icon"
-        className="hidden md:block absolute z-20 w-[110px] h-auto bottom-[150px] right-[150px]"
-      />
-    </section>
+        <img
+          src={Slimeball}
+          alt="Slime Icon"
+          className="hidden md:block absolute z-20 w-[110px] h-auto bottom-[150px] right-[150px]"
+        />
+      </section>
+      <Questions />
+    </>
   );
 }

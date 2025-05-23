@@ -1,12 +1,14 @@
 interface CoordinateInfoProps {
   isSlime: boolean | null;
-  x: string;
-  z: string;
+  cursorChunk: { x: number; z: number } | null;
 }
 
-export default function CoordinateInfo({ isSlime, x, z }: CoordinateInfoProps) {
-  const chunkX = Math.floor(Number(x) / 16);
-  const chunkZ = Math.floor(Number(z) / 16);
+export default function CoordinateInfo({
+  isSlime,
+  cursorChunk,
+}: CoordinateInfoProps) {
+  const chunkX = cursorChunk?.x ?? 0;
+  const chunkZ = cursorChunk?.z ?? 0;
 
   return (
     <div className="w-[512px] mx-auto mt-2 mb-1 text-end text-xs min-h-[1.25rem]">
@@ -23,7 +25,7 @@ export default function CoordinateInfo({ isSlime, x, z }: CoordinateInfoProps) {
           ? "C'est un chunk à slime !"
           : "Ce n'est pas un chunk à slime."}
         <span className="text-gray-500 font-normal ml-2 text-xs">
-          ChunkX: {chunkX}, ChunkZ: {chunkZ}
+          ChunkX : {chunkX}, ChunkZ : {chunkZ}
         </span>
       </p>
     </div>

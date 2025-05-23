@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import WorldAnalyzer from "./pages/WorldAnalyzer";
 import Tools from "./pages/Tools";
 import About from "./pages/About";
@@ -33,40 +34,43 @@ import Bastion from "./pages/tools/Bastion";
 export default function App() {
   return (
     <Router>
-      <Navbar />
-      <main className="p-6">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/world-analyzer" element={<WorldAnalyzer />} />
-          <Route path="/tools" element={<Tools />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/tools/slime" element={<SlimeChunk />} />
-          <Route path="/tools/biome" element={<Biome />} />
-          <Route path="/tools/village" element={<Village />} />
-          <Route path="/tools/dungeon" element={<Dungeon />} />
-          <Route path="/tools/stronghold" element={<Stronghold />} />
-          <Route path="/tools/mansion" element={<Mansion />} />
-          <Route path="/tools/monument" element={<Monument />} />
-          <Route path="/tools/outpost" element={<PillagerOutpost />} />
-          <Route path="/tools/mineshaft" element={<Mineshaft />} />
-          <Route path="/tools/ruined-portal" element={<RuinedPortal />} />
-          <Route path="/tools/jungle-temple" element={<JungleTemple />} />
-          <Route path="/tools/desert-temple" element={<DesertTemple />} />
-          <Route path="/tools/witch-hut" element={<WitchHut />} />
-          <Route path="/tools/treasure" element={<BuriedTreasure />} />
-          <Route path="/tools/shipwreck" element={<Shipwreck />} />
-          <Route path="/tools/igloo" element={<Igloo />} />
-          <Route path="/tools/ocean-ruin" element={<OceanRuin />} />
-          <Route path="/tools/fossil" element={<Fossil />} />
-          <Route path="/tools/ravine" element={<Ravine />} />
-          <Route path="/tools/amethyst" element={<AmethystGeode />} />
-          <Route path="/tools/ancient-city" element={<AncientCity />} />
-          <Route path="/tools/end-city" element={<EndCity />} />
-          <Route path="/tools/end-gateway" element={<EndGateway />} />
-          <Route path="/tools/nether-fortress" element={<NetherFortress />} />
-          <Route path="/tools/bastion" element={<Bastion />} />
-        </Routes>
-      </main>
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow p-6">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/world-analyzer" element={<WorldAnalyzer />} />
+            <Route path="/tools" element={<Tools />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/tools/slime" element={<SlimeChunk />} />
+            <Route path="/tools/biome" element={<Biome />} />
+            <Route path="/tools/village" element={<Village />} />
+            <Route path="/tools/dungeon" element={<Dungeon />} />
+            <Route path="/tools/stronghold" element={<Stronghold />} />
+            <Route path="/tools/mansion" element={<Mansion />} />
+            <Route path="/tools/monument" element={<Monument />} />
+            <Route path="/tools/outpost" element={<PillagerOutpost />} />
+            <Route path="/tools/mineshaft" element={<Mineshaft />} />
+            <Route path="/tools/ruined-portal" element={<RuinedPortal />} />
+            <Route path="/tools/jungle-temple" element={<JungleTemple />} />
+            <Route path="/tools/desert-temple" element={<DesertTemple />} />
+            <Route path="/tools/witch-hut" element={<WitchHut />} />
+            <Route path="/tools/treasure" element={<BuriedTreasure />} />
+            <Route path="/tools/shipwreck" element={<Shipwreck />} />
+            <Route path="/tools/igloo" element={<Igloo />} />
+            <Route path="/tools/ocean-ruin" element={<OceanRuin />} />
+            <Route path="/tools/fossil" element={<Fossil />} />
+            <Route path="/tools/ravine" element={<Ravine />} />
+            <Route path="/tools/amethyst" element={<AmethystGeode />} />
+            <Route path="/tools/ancient-city" element={<AncientCity />} />
+            <Route path="/tools/end-city" element={<EndCity />} />
+            <Route path="/tools/end-gateway" element={<EndGateway />} />
+            <Route path="/tools/nether-fortress" element={<NetherFortress />} />
+            <Route path="/tools/bastion" element={<Bastion />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
     </Router>
   );
 }

@@ -1,0 +1,12 @@
+{
+  "devDependencies": {
+    "@types/lodash": "^4.17.16"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "prompt-sync": "^4.2.0",
+    "react-icons": "^5.5.0",
+    "react-share-social": "^0.1.60",
+    "styled-components": "^6.1.18"
+  }
+}
