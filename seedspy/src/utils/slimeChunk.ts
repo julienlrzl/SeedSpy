@@ -1,3 +1,5 @@
+import { MersenneTwister19937, integer } from "random-js";
+
 // Emule la conversion Java int32 signée
 function toInt32(n: bigint): bigint {
   const mask32 = 0xffffffffn;
@@ -40,7 +42,7 @@ class JavaRandom {
   }
 }
 
-export function isSlimeChunk(
+export function isSlimeChunkJava(
   worldSeed: bigint,
   xPos: number,
   zPos: number
@@ -66,4 +68,33 @@ export function isSlimeChunk(
   // 6) on passe au Random et on teste nextInt(10)==0
   const rnd = new JavaRandom(finalSeed);
   return rnd.nextInt(10) === 0;
+}
+
+export function isSlimeChunkBedrock(
+  _worldSeed: bigint,
+  xPos: number,
+  zPos: number
+): boolean {
+  // 1) coordonnées comme unsigned 32 bits
+  const ux = BigInt(xPos >>> 0);
+  const uz = BigInt(zPos >>> 0);
+
+  // 2) hash simple
+  //const hash = Number((ux * 0x1f1f1f1fn) ^ (uz & 0xffffffffn));
+  const hash = Number(((ux * 0x1f1f1f1fn) ^ uz) & 0xffffffffn);
+
+  // 3) seed MT19937 avec ce hash
+  const engine = MersenneTwister19937.seed(hash);
+
+  // 4) on tire un entier 32 bits non signé [0..0xFFFFFFFF]
+  const n = integer(0, 0xffffffff)(engine);
+
+  // 5) division entière par 10 via « multiply-high trick »
+  const product = BigInt(n) * 0xcccccccdn;
+  const hi = Number((product >> 32n) & 0xffffffffn);
+  // équivalent à Math.floor(n/10)
+  const hi10 = ((hi >>> 3) + (hi >>> 3) * 4) * 2;
+
+  // 6) chance 1/10 si égal
+  return n === hi10;
 }

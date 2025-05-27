@@ -1,7 +1,7 @@
 import Slimeball from "../../assets/Slimeball.png";
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { isSlimeChunk } from "../../utils/slimeChunk";
+import { isSlimeChunkJava, isSlimeChunkBedrock } from "../../utils/slimeChunk";
 
 // Import des composants
 import SeedInput from "../../components/SlimeFinder/SeedInput";
@@ -13,7 +13,7 @@ import SlimeGrid from "../../components/SlimeFinder/SlimeGrid";
 import Questions from "../../components/Questions";
 
 export default function SlimeChunk() {
-  const [platform, setPlatform] = useState("java");
+  const [platform, setPlatform] = useState<"java" | "bedrock">("java");
   const [gridLines, setGridLines] = useState(true);
   const [x, setX] = useState("");
   const location = useLocation();
@@ -42,6 +42,9 @@ export default function SlimeChunk() {
     x: number;
     z: number;
   } | null>(null);
+
+  const isSlimeFn =
+    platform === "java" ? isSlimeChunkJava : isSlimeChunkBedrock;
 
   function smoothZoom() {
     if (wheelDeltaRef.current === 0) return;
@@ -79,7 +82,7 @@ export default function SlimeChunk() {
     setCenterChunk({ x: chunkX, z: chunkZ });
     setMarkerChunk({ x: chunkX, z: chunkZ });
 
-    const result = isSlimeChunk(BigInt(currentSeed), chunkX, chunkZ);
+    const result = isSlimeFn(BigInt(currentSeed), chunkX, chunkZ);
     setIsSlime(result);
 
     loadSlimeChunksAround(chunkX, chunkZ);
@@ -119,7 +122,7 @@ export default function SlimeChunk() {
         const chunkX = centerX + dx;
         const chunkZ = centerZ + dz;
 
-        if (isSlimeChunk(seedParam, chunkX, chunkZ)) {
+        if (isSlimeFn(seedParam, centerX + dx, centerZ + dz)) {
           newSet.add(`${chunkX},${chunkZ}`);
         }
       }
@@ -129,10 +132,18 @@ export default function SlimeChunk() {
   }
 
   useEffect(() => {
-    if (centerChunk) {
-      loadSlimeChunksAround(centerChunk.x, centerChunk.z);
+    if (!centerChunk) return;
+
+    // 1) on recharge la grille
+    loadSlimeChunksAround(centerChunk.x, centerChunk.z);
+
+    // 2) et on recalcul aussi le marker (la pastille rouge)
+    if (markerChunk) {
+      const worldSeed = BigInt(seed);
+      const isSlimy = isSlimeFn(worldSeed, markerChunk.x, markerChunk.z);
+      setIsSlime(isSlimy);
     }
-  }, [zoom, centerChunk]);
+  }, [platform, seed, zoom, centerChunk]);
 
   useEffect(() => {
     const grid = gridRef.current;
@@ -164,7 +175,7 @@ export default function SlimeChunk() {
     if (!isNaN(cx) && !isNaN(cz)) {
       setCenterChunk({ x: cx, z: cz });
       setMarkerChunk({ x: cx, z: cz });
-      setIsSlime(isSlimeChunk(BigInt(s ?? "0"), cx, cz));
+      setIsSlime(isSlimeFn(BigInt(s ?? "0"), cx, cz));
       loadSlimeChunksAround(cx, cz);
     }
   }, [location.search]);
