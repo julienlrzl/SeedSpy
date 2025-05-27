@@ -1,5 +1,6 @@
 import Slimeball from "../../assets/Slimeball.png";
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { isSlimeChunk } from "../../utils/slimeChunk";
 
 // Import des composants
@@ -13,8 +14,9 @@ import Questions from "../../components/Questions";
 
 export default function SlimeChunk() {
   const [platform, setPlatform] = useState("java");
-
+  const [gridLines, setGridLines] = useState(true);
   const [x, setX] = useState("");
+  const location = useLocation();
   const [z, setZ] = useState("");
   const [seed, setSeed] = useState("");
   const [isSlime, setIsSlime] = useState<boolean | null>(null);
@@ -31,6 +33,9 @@ export default function SlimeChunk() {
   const wheelDeltaRef = useRef(0);
   const animationRef = useRef<number | null>(null);
   const [hoverChunk, setHoverChunk] = useState<{ x: number; z: number } | null>(
+    null
+  );
+  const [hoverBlock, setHoverBlock] = useState<{ x: number; z: number } | null>(
     null
   );
   const [markerChunk, setMarkerChunk] = useState<{
@@ -138,6 +143,32 @@ export default function SlimeChunk() {
     };
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+
+    // seed
+    const s = params.get("seed");
+    if (s) setSeed(s);
+
+    // zoom
+    const zq = parseFloat(params.get("zoom") ?? "");
+    if (!isNaN(zq)) setZoom(zq);
+
+    // gridLines
+    const gl = params.get("gridLines");
+    if (gl === "true" || gl === "false") setGridLines(gl === "true");
+
+    // centre de vue
+    const cx = parseInt(params.get("centerX") ?? "", 10);
+    const cz = parseInt(params.get("centerZ") ?? "", 10);
+    if (!isNaN(cx) && !isNaN(cz)) {
+      setCenterChunk({ x: cx, z: cz });
+      setMarkerChunk({ x: cx, z: cz });
+      setIsSlime(isSlimeChunk(BigInt(s ?? "0"), cx, cz));
+      loadSlimeChunksAround(cx, cz);
+    }
+  }, [location.search]);
+
   return (
     <>
       <section className="w-full px-4 pt-[100px] pb-16 flex justify-center relative">
@@ -173,12 +204,14 @@ export default function SlimeChunk() {
               gridRef={gridRef}
               setCenterChunk={setCenterChunk}
               onHoverChunk={setHoverChunk}
+              onHoverBlock={setHoverBlock}
             />
           </div>
           {/* Info sur les coordonnées */}
           <CoordinateInfo
             isSlime={isSlime}
             cursorChunk={hoverChunk ?? centerChunk}
+            cursorBlock={hoverBlock}
           />
           {/* Champs X/Z + bouton Go aligné à gauche de la grille */}
           <div className="mt-2 w-[512px] mx-auto flex justify-between items-center">
@@ -191,7 +224,13 @@ export default function SlimeChunk() {
               onGo={checkSlimeChunk}
             />
             {/* Share Button */}
-            <ShareButton />
+            <ShareButton
+              gridRef={gridRef}
+              seed={seed}
+              centerChunk={centerChunk}
+              zoom={zoom}
+              gridLines={gridLines}
+            />
           </div>
         </div>
         <img

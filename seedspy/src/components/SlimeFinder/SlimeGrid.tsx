@@ -13,8 +13,12 @@ export interface SlimeGridProps {
   setCenterChunk: React.Dispatch<
     React.SetStateAction<{ x: number; z: number }>
   >;
-  // callback pour remonter le chunk sous le curseur
+  // callback pour remonter le chunk sous la souris
   onHoverChunk: React.Dispatch<
+    React.SetStateAction<{ x: number; z: number } | null>
+  >;
+  // callback pour remonter la coordonnée exacte en blocs
+  onHoverBlock?: React.Dispatch<
     React.SetStateAction<{ x: number; z: number } | null>
   >;
 }
@@ -29,6 +33,7 @@ export default function SlimeGrid({
   gridRef,
   setCenterChunk,
   onHoverChunk,
+  onHoverBlock,
 }: SlimeGridProps) {
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef<{
@@ -70,7 +75,7 @@ export default function SlimeGrid({
         });
       }
 
-      // 2. Survol : calcul du chunk sous la souris
+      // 2. Survol : calcul du chunk et du bloc sous la souris
       const rect = grid.getBoundingClientRect();
       const relX = e.clientX - rect.left;
       const relY = e.clientY - rect.top;
@@ -83,13 +88,23 @@ export default function SlimeGrid({
         centerChunk === null
       ) {
         onHoverChunk(null);
+        onHoverBlock && onHoverBlock(null);
       } else {
         const cellX = Math.floor(relX / chunkSize);
         const cellZ = Math.floor(relY / chunkSize);
-        onHoverChunk({
-          x: centerChunk.x - half + cellX,
-          z: centerChunk.z - half + cellZ,
-        });
+        const hoverChunkX = centerChunk.x - half + cellX;
+        const hoverChunkZ = centerChunk.z - half + cellZ;
+
+        onHoverChunk({ x: hoverChunkX, z: hoverChunkZ });
+
+        if (onHoverBlock) {
+          // intra-chunk (0..15)
+          const intraX = Math.floor(((relX % chunkSize) / chunkSize) * 16);
+          const intraZ = Math.floor(((relY % chunkSize) / chunkSize) * 16);
+          const blockX = hoverChunkX * 16 + intraX;
+          const blockZ = hoverChunkZ * 16 + intraZ;
+          onHoverBlock({ x: blockX, z: blockZ });
+        }
       }
     };
 
@@ -100,8 +115,8 @@ export default function SlimeGrid({
     };
 
     const onPointerLeave = () => {
-      // Quand la souris sort de la grille
       onHoverChunk(null);
+      onHoverBlock && onHoverBlock(null);
     };
 
     grid.addEventListener("pointerdown", onPointerDown);
@@ -123,6 +138,7 @@ export default function SlimeGrid({
     centerChunk,
     setCenterChunk,
     onHoverChunk,
+    onHoverBlock,
     half,
   ]);
 
