@@ -65,7 +65,8 @@ export default function SeedInput({
       }
 
       // 4) Lire les 8 octets juste après le pattern
-      const dv = new DataView(data.buffer, idx + pattern.length);
+      const offset = data.byteOffset + idx + pattern.length;
+      const dv = new DataView(data.buffer, offset);
       const seedBig = dv.getBigInt64(0, false); // big-endian
 
       setSeed(seedBig.toString());

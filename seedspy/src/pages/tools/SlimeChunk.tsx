@@ -1,9 +1,9 @@
 import Slimeball from "../../assets/Slimeball.png";
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { isSlimeChunkJava, isSlimeChunkBedrock } from "../../utils/slimeChunk";
+import { isSlimeChunkJava } from "../../utils/slimeChunkJava";
+import { isSlimeChunkBedrock } from "../../utils/slimeChunkBedrock";
 
-// Import des composants
 import SeedInput from "../../components/SlimeFinder/SeedInput";
 import PlatformSelect from "../../components/SlimeFinder/PlatformSelect";
 import ShareButton from "../../components/SlimeFinder/ShareButton";
@@ -15,23 +15,29 @@ import Questions from "../../components/Questions";
 export default function SlimeChunk() {
   const [platform, setPlatform] = useState<"java" | "bedrock">("java");
   const [gridLines, setGridLines] = useState(true);
-  const [x, setX] = useState("");
+  const [x, setX] = useState("0");
   const location = useLocation();
-  const [z, setZ] = useState("");
-  const [seed, setSeed] = useState("");
-  const [isSlime, setIsSlime] = useState<boolean | null>(null);
-  const [slimeChunksSet, setSlimeChunksSet] = useState<Set<string>>(new Set());
+  const [z, setZ] = useState("0");
+
+  function generateRandomSeed(): string {
+    const min = BigInt("-9000000000000000000");
+    const max = BigInt("9000000000000000000");
+    const range = max - min + BigInt(1);
+    const rand =
+      BigInt(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)) *
+      BigInt(Date.now());
+    return ((rand % range) + min).toString();
+  }
+
+  const [seed, setSeed] = useState(generateRandomSeed);
+  const [isSlime, setIsSlime] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [centerChunk, setCenterChunk] = useState<{ x: number; z: number }>({
     x: 0,
     z: 0,
   });
   const gridSize = 512;
-  const chunksPerRow = Math.floor(64 / zoom);
-  const chunkSize = gridSize / chunksPerRow;
   const gridRef = useRef<HTMLDivElement>(null!);
-  const wheelDeltaRef = useRef(0);
-  const animationRef = useRef<number | null>(null);
   const [hoverChunk, setHoverChunk] = useState<{ x: number; z: number } | null>(
     null
   );
@@ -41,31 +47,10 @@ export default function SlimeChunk() {
   const [markerChunk, setMarkerChunk] = useState<{
     x: number;
     z: number;
-  } | null>(null);
+  }>({ x: 0, z: 0 });
 
   const isSlimeFn =
     platform === "java" ? isSlimeChunkJava : isSlimeChunkBedrock;
-
-  function smoothZoom() {
-    if (wheelDeltaRef.current === 0) return;
-
-    const delta = wheelDeltaRef.current;
-    wheelDeltaRef.current *= 0.8; // Atténuation progressive
-
-    if (Math.abs(wheelDeltaRef.current) < 0.01) {
-      wheelDeltaRef.current = 0;
-      animationRef.current = null;
-      return;
-    }
-
-    setZoom((prev) => {
-      const newZoom =
-        delta < 0 ? Math.max(prev - 0.05, 1) : Math.min(prev + 0.05, 4);
-      return newZoom;
-    });
-
-    animationRef.current = requestAnimationFrame(smoothZoom);
-  }
 
   function checkSlimeChunk() {
     let currentSeed = seed;
@@ -84,99 +69,39 @@ export default function SlimeChunk() {
 
     const result = isSlimeFn(BigInt(currentSeed), chunkX, chunkZ);
     setIsSlime(result);
-
-    loadSlimeChunksAround(chunkX, chunkZ);
   }
 
-  function handleWheel(e: WheelEvent) {
-    e.preventDefault();
-    wheelDeltaRef.current += e.deltaY;
-
-    if (!animationRef.current) {
-      animationRef.current = requestAnimationFrame(smoothZoom);
-    }
-  }
-
-  function generateRandomSeed(): string {
-    const min = BigInt("-9000000000000000000");
-    const max = BigInt("9000000000000000000");
-    const range = max - min + BigInt(1);
-
-    const rand =
-      BigInt(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)) *
-      BigInt(Date.now());
-    const seed = (rand % range) + min;
-
-    return seed.toString();
-  }
-
-  function loadSlimeChunksAround(centerX: number, centerZ: number) {
-    const chunksToLoad = Math.floor(64 / zoom);
-    const half = Math.floor(chunksToLoad / 2);
-
-    const newSet = new Set<string>();
-    const seedParam = BigInt(seed);
-
-    for (let dx = -half; dx < half; dx++) {
-      for (let dz = -half; dz < half; dz++) {
-        const chunkX = centerX + dx;
-        const chunkZ = centerZ + dz;
-
-        if (isSlimeFn(seedParam, centerX + dx, centerZ + dz)) {
-          newSet.add(`${chunkX},${chunkZ}`);
-        }
+  // Recheck marker when platform/seed changes
+  useEffect(() => {
+    if (markerChunk && seed) {
+      try {
+        const worldSeed = BigInt(seed);
+        setIsSlime(isSlimeFn(worldSeed, markerChunk.x, markerChunk.z));
+      } catch {
+        /* invalid seed */
       }
     }
+  }, [platform, seed]);
 
-    setSlimeChunksSet(newSet);
-  }
-
-  useEffect(() => {
-    if (!centerChunk) return;
-
-    // 1) on recharge la grille
-    loadSlimeChunksAround(centerChunk.x, centerChunk.z);
-
-    // 2) et on recalcul aussi le marker (la pastille rouge)
-    if (markerChunk) {
-      const worldSeed = BigInt(seed);
-      const isSlimy = isSlimeFn(worldSeed, markerChunk.x, markerChunk.z);
-      setIsSlime(isSlimy);
-    }
-  }, [platform, seed, zoom, centerChunk]);
-
-  useEffect(() => {
-    const grid = gridRef.current;
-    if (!grid) return;
-    grid.addEventListener("wheel", handleWheel, { passive: false });
-    return () => {
-      grid.removeEventListener("wheel", handleWheel);
-    };
-  }, []);
-
+  // URL params
   useEffect(() => {
     const params = new URLSearchParams(location.search);
 
-    // seed
     const s = params.get("seed");
     if (s) setSeed(s);
 
-    // zoom
     const zq = parseFloat(params.get("zoom") ?? "");
     if (!isNaN(zq)) setZoom(zq);
 
-    // gridLines
     const gl = params.get("gridLines");
     if (gl === "true" || gl === "false") setGridLines(gl === "true");
 
-    // centre de vue
     const cx = parseInt(params.get("centerX") ?? "", 10);
     const cz = parseInt(params.get("centerZ") ?? "", 10);
     if (!isNaN(cx) && !isNaN(cz)) {
       setCenterChunk({ x: cx, z: cz });
       setMarkerChunk({ x: cx, z: cz });
       setIsSlime(isSlimeFn(BigInt(s ?? "0"), cx, cz));
-      loadSlimeChunksAround(cx, cz);
     }
   }, [location.search]);
 
@@ -203,29 +128,32 @@ export default function SlimeChunk() {
             {/* Java/Bedrock select */}
             <PlatformSelect value={platform} onChange={setPlatform} />
           </div>
-          <div className="relative w-[512px] h-[512px] mx-auto overflow-hidden">
-            {/* Grille zoomable */}
+          <div className="mx-auto" style={{ width: gridSize + 30 }}>
+            {/* Grid + rulers */}
             <SlimeGrid
-              chunksPerRow={chunksPerRow}
-              chunkSize={chunkSize}
               gridSize={gridSize}
+              seed={seed}
+              platform={platform}
+              isSlimeFn={isSlimeFn}
               centerChunk={centerChunk}
-              markerChunk={markerChunk}
-              slimeChunksSet={slimeChunksSet}
-              gridRef={gridRef}
               setCenterChunk={setCenterChunk}
+              markerChunk={markerChunk}
+              zoom={zoom}
+              setZoom={setZoom}
               onHoverChunk={setHoverChunk}
               onHoverBlock={setHoverBlock}
+              gridRef={gridRef}
             />
+            {/* Info + controls aligned with grid (offset by ruler) */}
+            <div style={{ paddingLeft: 30 }}>
+              <CoordinateInfo
+                isSlime={isSlime}
+                cursorChunk={hoverChunk ?? centerChunk}
+                cursorBlock={hoverBlock}
+              />
+            </div>
           </div>
-          {/* Info sur les coordonnées */}
-          <CoordinateInfo
-            isSlime={isSlime}
-            cursorChunk={hoverChunk ?? centerChunk}
-            cursorBlock={hoverBlock}
-          />
-          {/* Champs X/Z + bouton Go aligné à gauche de la grille */}
-          <div className="mt-2 w-[512px] mx-auto flex justify-between items-center">
+          <div className="mt-2 mx-auto flex justify-between items-center" style={{ width: gridSize + 30, paddingLeft: 30 }}>
             {/* X/Z + Go */}
             <CoordinateForm
               x={x}

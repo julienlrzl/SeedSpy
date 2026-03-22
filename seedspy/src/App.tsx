@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import CoffeeWidget from "./components/CoffeeWidget";
 import WorldAnalyzer from "./pages/WorldAnalyzer";
 import Tools from "./pages/Tools";
 import About from "./pages/About";
@@ -70,6 +71,7 @@ export default function App() {
           </Routes>
         </main>
         <Footer />
+        <CoffeeWidget />
       </div>
     </Router>
   );

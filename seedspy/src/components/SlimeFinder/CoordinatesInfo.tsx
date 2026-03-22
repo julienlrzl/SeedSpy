@@ -1,5 +1,5 @@
 interface CoordinateInfoProps {
-  isSlime: boolean | null;
+  isSlime: boolean;
   cursorChunk: { x: number; z: number } | null;
   cursorBlock?: { x: number; z: number } | null;
 }
@@ -9,10 +9,6 @@ export default function CoordinateInfo({
   cursorChunk,
   cursorBlock,
 }: CoordinateInfoProps) {
-  if (isSlime === null) {
-    return <div className="w-[512px] mx-auto mt-2 mb-1 min-h-[1.25rem]" />;
-  }
-
   const chunkX = cursorChunk?.x ?? 0;
   const chunkZ = cursorChunk?.z ?? 0;
   const blockX = cursorBlock?.x ?? chunkX * 16;
@@ -22,7 +18,7 @@ export default function CoordinateInfo({
     : "Ce n'est pas un chunk à slime.";
 
   return (
-    <div className="w-[512px] mx-auto mt-2 mb-1 text-xs min-h-[1.25rem]">
+    <div className="mt-2 mb-1 text-xs min-h-[1.25rem]">
       <div className="flex items-center">
         {/* 1. Bloc X/Z tout à gauche */}
         <span className="text-gray-500 font-normal whitespace-nowrap">
